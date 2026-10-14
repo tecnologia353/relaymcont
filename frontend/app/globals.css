@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens do Relay.
+ * Canais RGB separados por espaço para permitir opacidade via Tailwind (ex.: bg-accent/10).
+ */
+@layer base {
+  :root {
+    color-scheme: light;
+
+    /* Superfícies */
+    --canvas: 251 251 252;        /* fundo da aplicação */
+    --surface: 255 255 255;       /* cards, painéis, modais */
+    --sunken: 245 245 247;        /* sidebar, trilhos, áreas recuadas */
+    --hover: 239 239 242;         /* hover e item selecionado */
+
+    /* Bordas */
+    --line: 232 232 236;
+    --line-strong: 214 214 221;
+
+    /* Texto */
+    --fg: 24 24 29;
+    --fg-muted: 104 104 117;
+    --fg-subtle: 145 145 157;     /* apenas para conteúdo não essencial e placeholders */
+
+    /* Marca */
+    --accent: 94 106 210;         /* #5E6AD2 */
+    --accent-hover: 80 92 196;
+    --accent-fg: 255 255 255;
+    /* Fundos sólidos com texto branco (botões, checkbox): contraste AA nos dois temas */
+    --accent-solid: 94 106 210;
+    --accent-solid-hover: 80 92 196;
+    --danger-solid: 205 50 56;
+
+    /* Semânticas */
+    --success: 38 151 94;
+    --warning: 196 128 0;
+    --danger: 220 62 66;
+    --info: 47 120 220;
+
+    /* Status de tarefa */
+    --status-todo: 145 145 157;
+    --status-progress: 214 158 0;
+    --status-waiting: 232 110 30;
+    --status-review: 94 106 210;
+    --status-done: 38 151 94;
+    --status-canceled: 145 145 157;
+
+    --shadow-color: 20 20 40;
+
+    /* Apelidos legados — removidos quando todas as telas migrarem */
+    --ink: var(--fg);
+    --muted: var(--fg-muted);
+    --panel: var(--canvas);
+    --elevated: var(--surface);
+  }
+
+  .dark {
+    color-scheme: dark;
+
+    --canvas: 14 14 17;
+    --surface: 22 22 26;
+    --sunken: 18 18 21;
+    --hover: 32 32 38;
+
+    --line: 40 40 47;
+    --line-strong: 56 56 65;
+
+    --fg: 236 236 240;
+    --fg-muted: 156 156 168;
+    --fg-subtle: 112 112 124;
+
+    --accent: 124 134 232;
+    --accent-hover: 142 151 238;
+    --accent-fg: 255 255 255;
+    --accent-solid: 94 106 210;
+    --accent-solid-hover: 108 119 222;
+    --danger-solid: 196 48 54;
+
+    --success: 70 190 125;
+    --warning: 232 172 50;
+    --danger: 240 98 98;
+    --info: 96 160 245;
+
+    --status-todo: 120 120 132;
+    --status-progress: 232 182 40;
+    --status-waiting: 242 136 66;
+    --status-review: 124 134 232;
+    --status-done: 70 190 125;
+    --status-canceled: 120 120 132;
+
+    --shadow-color: 0 0 0;
+  }
+
+  * { box-sizing: border-box; }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    color: rgb(var(--fg));
+    background: rgb(var(--canvas));
+    font-feature-settings: "cv11", "calt", "rlig";
+    @apply font-sans text-base;
+  }
+
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  ::selection { background: rgb(var(--accent) / 0.22); }
+
+  ::placeholder { color: rgb(var(--fg-subtle)); opacity: 1; }
+
+  /* Foco visível apenas na navegação por teclado */
+  :focus { outline: none; }
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Cor do avatar derivada de --avatar-h (matiz definido por pessoa) */
+  .avatar-tint { background: hsl(var(--avatar-h) 60% 52% / 0.16); color: hsl(var(--avatar-h) 50% 36%); }
+  .dark .avatar-tint { background: hsl(var(--avatar-h) 55% 60% / 0.2); color: hsl(var(--avatar-h) 75% 80%); }
+
+  .thin-scroll { scrollbar-width: thin; scrollbar-color: rgb(var(--line-strong)) transparent; }
+  .thin-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  .thin-scroll::-webkit-scrollbar-track { background: transparent; }
+  .thin-scroll::-webkit-scrollbar-thumb { background: rgb(var(--line-strong)); border-radius: 999px; }
+}

@@ -1,0 +1,14 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+.next/
+dist/
+build/
+.DS_Store
+
+# Local databases, logs, build caches
+*.db
+*.log
+*.tsbuildinfo
