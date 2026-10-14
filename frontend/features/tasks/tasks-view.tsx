@@ -3,17 +3,14 @@
 import { Inbox, ListTodo, Plus, SearchX } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Button, EmptyState, ErrorState, SkeletonRows, buttonClasses, useToast } from "@/components/ui";
-import type { Status, Task } from "@/lib/api";
-import { emit } from "@/lib/events";
+import { Button, EmptyState, ErrorState, SkeletonRows, buttonClasses } from "@/components/ui";
 import { PageHeader } from "@/features/shell/page-header";
 import { FilterBar } from "./task-filters";
 import { TaskCreate } from "./task-create";
 import { TaskDetail } from "./task-detail";
 import { TaskList } from "./task-list";
-import { updateTask } from "./tasks-api";
 import { activeFilterCount, applyFilters, groupByStatus, groupMyDay } from "./task-utils";
-import { useReferenceData, useTaskUrlState, useTasks } from "./use-task-data";
+import { useReferenceData, useStatusChange, useTaskUrlState, useTasks } from "./use-task-data";
 
 interface TasksViewProps {
   /** "mine" = Meu Dia: só tarefas do usuário, agrupadas por urgência. */
@@ -27,7 +24,6 @@ const copy = {
 
 export function TasksView({ mode }: TasksViewProps) {
   const mine = mode === "mine";
-  const { toast } = useToast();
   const { tasks, setTasks, state, retry } = useTasks(mine);
   const reference = useReferenceData();
   const { filters, setFilters, clearFilters, openTaskId, openTask, closeTask } = useTaskUrlState();
@@ -37,16 +33,7 @@ export function TasksView({ mode }: TasksViewProps) {
   const groups = useMemo(() => (mine ? groupMyDay(filtered) : groupByStatus(filtered)), [filtered, mine]);
   const shownCount = groups.reduce((total, group) => total + group.tasks.length, 0);
 
-  const changeStatus = async (task: Task, status: Status) => {
-    setTasks((list) => list.map((item) => (item.id === task.id ? { ...item, status } : item)));
-    try {
-      await updateTask(task.id, { status });
-      emit("tasks:changed");
-    } catch (error) {
-      setTasks((list) => list.map((item) => (item.id === task.id ? { ...item, status: task.status } : item)));
-      toast({ tone: "error", title: "Não foi possível alterar o status", description: (error as Error).message });
-    }
-  };
+  const changeStatus = useStatusChange(setTasks);
 
   const newTaskButton = (
     <Button variant="primary" size="sm" leadingIcon={<Plus size={15} aria-hidden />} onClick={() => setCreating(true)}>

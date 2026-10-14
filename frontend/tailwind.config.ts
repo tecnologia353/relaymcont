@@ -27,11 +27,6 @@ export default {
           done: token("status-done"),
           canceled: token("status-canceled"),
         },
-        // Legado — remover após a migração das telas
-        ink: token("ink"),
-        muted: token("muted"),
-        panel: token("panel"),
-        elevated: token("elevated"),
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],

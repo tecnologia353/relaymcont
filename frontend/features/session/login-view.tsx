@@ -1,17 +1,24 @@
 "use client";
 
+import { AlertCircle, Eye, EyeOff, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
+import { LogoMark } from "@/components/brand/logo";
+import { Button, Field, IconButton, Input } from "@/components/ui";
 import { Splash } from "@/features/shell/splash";
 import { useSession } from "./session-provider";
 
-/* Tela de login da versão anterior, ligada à nova sessão. Redesenho previsto para a Etapa 6. */
+const DEMO = { email: "admin@relay.demo", password: "relay123" };
+
 export function LoginView() {
   const router = useRouter();
   const { session, login } = useSession();
-  const [email, setEmail] = useState("admin@relay.demo");
-  const [password, setPassword] = useState("relay123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (session.status === "authenticated") router.replace("/");
@@ -19,33 +26,100 @@ export function LoginView() {
 
   if (session.status !== "unauthenticated") return <Splash />;
 
+  const submit = async (event: FormEvent, credentials = { email, password }) => {
+    event.preventDefault();
+    if (!credentials.email.trim() || !credentials.password) {
+      setError("Informe e-mail e senha.");
+      return;
+    }
+    setError("");
+    setSubmitting(true);
+    try {
+      await login(credentials.email.trim(), credentials.password);
+    } catch (err) {
+      setError((err as Error).message);
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <div className="grid min-h-screen place-items-center bg-panel p-6 text-ink">
-      <form
-        className="w-full max-w-sm rounded-lg border border-line bg-elevated p-6 shadow-[0_20px_80px_rgb(0_0_0_/_0.10)]"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setError("");
-          try {
-            await login(email, password);
-          } catch (err) {
-            setError((err as Error).message);
-          }
-        }}
-      >
-        <div className="mb-8">
-          <div className="mb-3 grid h-10 w-10 place-items-center rounded-md bg-ink text-surface">R</div>
-          <h1 className="text-2xl font-semibold">Entrar no Relay</h1>
-          <p className="mt-1 text-sm text-muted">Operação contábil em um só lugar.</p>
+    <main className="grid min-h-dvh place-items-center bg-canvas px-4 py-10">
+      <div className="w-full max-w-sm animate-slide-up">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <LogoMark size={40} className="mb-4" />
+          <h1 className="text-xl font-semibold text-fg">Entrar no Relay</h1>
+          <p className="mt-1 text-sm text-fg-muted">Operação contábil em um só lugar.</p>
         </div>
-        <label className="text-xs font-medium text-muted">E-mail</label>
-        <input className="mb-4 mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 outline-none focus:border-accent" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <label className="text-xs font-medium text-muted">Senha</label>
-        <input type="password" className="mb-4 mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 outline-none focus:border-accent" value={password} onChange={(e) => setPassword(e.target.value)} />
-        {error && <div className="mb-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-        <button className="h-10 w-full rounded-md bg-ink text-sm font-medium text-surface">Entrar</button>
-        <p className="mt-4 text-xs text-muted">Demo: admin@relay.demo / relay123</p>
-      </form>
-    </div>
+
+        <form noValidate onSubmit={submit} className="space-y-4 rounded-xl border border-line bg-surface p-6 shadow-xs">
+          {error && (
+            <div role="alert" className="flex items-start gap-2 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+              <AlertCircle size={15} className="mt-0.5 shrink-0" aria-hidden />
+              {error}
+            </div>
+          )}
+          <Field label="E-mail">
+            {(control) => (
+              <Input
+                {...control}
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="voce@escritorio.com.br"
+                invalid={Boolean(error)}
+                autoFocus
+              />
+            )}
+          </Field>
+          <Field label="Senha">
+            {(control) => (
+              <div className="relative">
+                <Input
+                  {...control}
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  invalid={Boolean(error)}
+                  className="pr-10"
+                />
+                <IconButton
+                  size="sm"
+                  className="absolute right-1 top-1/2 -translate-y-1/2"
+                  label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  tooltip={false}
+                  icon={showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  onClick={() => setShowPassword((value) => !value)}
+                />
+              </div>
+            )}
+          </Field>
+          <Button type="submit" variant="primary" size="lg" className="w-full" loading={submitting} leadingIcon={<LogIn size={15} aria-hidden />}>
+            Entrar
+          </Button>
+        </form>
+
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-dashed border-line px-4 py-3 text-sm">
+          <div className="min-w-0">
+            <p className="font-medium text-fg">Conta de demonstração</p>
+            <p className="truncate text-xs text-fg-muted">
+              {DEMO.email} · {DEMO.password}
+            </p>
+          </div>
+          <Button
+            size="sm"
+            disabled={submitting}
+            onClick={(event) => {
+              setEmail(DEMO.email);
+              setPassword(DEMO.password);
+              submit(event, DEMO);
+            }}
+          >
+            Usar demo
+          </Button>
+        </div>
+      </div>
+    </main>
   );
 }

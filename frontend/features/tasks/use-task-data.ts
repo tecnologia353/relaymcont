@@ -2,10 +2,12 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { useToast } from "@/components/ui";
 import { api } from "@/lib/api";
-import type { Client, Department, Task, User } from "@/lib/api";
-import { useRelayEvent } from "@/lib/events";
-import { fetchTasks } from "./tasks-api";
+import type { Client, Department, Status, Task, User } from "@/lib/api";
+import { emit, useRelayEvent } from "@/lib/events";
+import { fetchTasks, updateTask } from "./tasks-api";
 import { emptyFilters, parseFilters, writeFilters } from "./task-utils";
 import type { TaskFilters } from "./task-utils";
 
@@ -35,6 +37,24 @@ export function useTasks(mine: boolean) {
   }, [reload]);
 
   return { tasks, setTasks, state, reload, retry };
+}
+
+/** Troca de status otimista: atualiza a tela na hora e desfaz se a API falhar. */
+export function useStatusChange(setTasks: Dispatch<SetStateAction<Task[]>>) {
+  const { toast } = useToast();
+  return useCallback(
+    async (task: Task, status: Status) => {
+      setTasks((list) => list.map((item) => (item.id === task.id ? { ...item, status } : item)));
+      try {
+        await updateTask(task.id, { status });
+        emit("tasks:changed");
+      } catch (error) {
+        setTasks((list) => list.map((item) => (item.id === task.id ? { ...item, status: task.status } : item)));
+        toast({ tone: "error", title: "Não foi possível alterar o status", description: (error as Error).message });
+      }
+    },
+    [setTasks, toast],
+  );
 }
 
 export interface ReferenceData {

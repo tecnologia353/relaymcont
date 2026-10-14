@@ -49,12 +49,6 @@
     --status-canceled: 145 145 157;
 
     --shadow-color: 20 20 40;
-
-    /* Apelidos legados — removidos quando todas as telas migrarem */
-    --ink: var(--fg);
-    --muted: var(--fg-muted);
-    --panel: var(--canvas);
-    --elevated: var(--surface);
   }
 
   .dark {
