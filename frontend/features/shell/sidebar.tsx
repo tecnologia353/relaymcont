@@ -24,6 +24,7 @@ interface SidebarProps {
 
 export function Sidebar({ variant, collapsed = false, onToggleCollapsed, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const user = useCurrentUser();
   const unread = useUnreadCount();
   const compact = variant === "desktop" && collapsed;
 
@@ -51,7 +52,7 @@ export function Sidebar({ variant, collapsed = false, onToggleCollapsed, onClose
 
       <nav aria-label="Principal" className="thin-scroll flex-1 overflow-y-auto px-2 pb-3">
         {navGroups.map((group, index) => {
-          const items = compact ? group.items.filter((item) => !item.soon) : group.items;
+          const items = group.items.filter((item) => (!compact || !item.soon) && (!item.visible || item.visible(user)));
           if (items.length === 0) return null;
           return (
             <div key={group.label ?? index} className={cn(index > 0 && "mt-4")}>

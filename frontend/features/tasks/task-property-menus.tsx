@@ -10,14 +10,17 @@ interface MenuProps<T> {
   value: T;
   onChange: (value: T) => void;
   align?: "start" | "end";
+  /** Sem permissão: o gatilho aparece, mas o menu não abre. */
+  disabled?: boolean;
   trigger: (props: MenuTriggerProps) => ReactNode;
 }
 
-export function StatusMenu({ value, onChange, align, trigger }: MenuProps<Status>) {
+export function StatusMenu({ value, onChange, align, disabled, trigger }: MenuProps<Status>) {
   return (
     <DropdownMenu
       label="Alterar status"
       align={align}
+      disabled={disabled}
       trigger={trigger}
       items={statusOrder.map((status) => ({
         label: statusLabel[status],
@@ -29,11 +32,12 @@ export function StatusMenu({ value, onChange, align, trigger }: MenuProps<Status
   );
 }
 
-export function PriorityMenu({ value, onChange, align, trigger }: MenuProps<Priority>) {
+export function PriorityMenu({ value, onChange, align, disabled, trigger }: MenuProps<Priority>) {
   return (
     <DropdownMenu
       label="Alterar prioridade"
       align={align}
+      disabled={disabled}
       trigger={trigger}
       items={priorityOrder.map((priority) => ({
         label: priorityLabel[priority],

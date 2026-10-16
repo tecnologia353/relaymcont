@@ -5,6 +5,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Button, EmptyState, ErrorState, SegmentedControl, Skeleton, SkeletonRows } from "@/components/ui";
 import type { SegmentedOption } from "@/components/ui";
+import { usePermissions } from "@/features/session/use-permissions";
+import { Forbidden } from "@/features/shell/forbidden";
 import { PageHeader } from "@/features/shell/page-header";
 import { FilterBar } from "./task-filters";
 import { TaskBoard } from "./task-board";
@@ -26,6 +28,12 @@ const viewOptions: SegmentedOption<View>[] = [
 
 /** Operação: todas as tarefas do escritório em quadro por status ou em tabela ordenável. */
 export function OperationsView() {
+  const can = usePermissions();
+  if (!can.canViewOperations()) return <Forbidden title="Operação" />;
+  return <Operations />;
+}
+
+function Operations() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -47,7 +55,8 @@ export function OperationsView() {
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   };
 
-  const newTaskButton = (
+  const canCreate = usePermissions().canCreateTasks();
+  const newTaskButton = canCreate && (
     <Button variant="primary" size="sm" leadingIcon={<Plus size={15} aria-hidden />} onClick={() => setCreating(true)}>
       <span className="sr-only sm:not-sr-only">Nova tarefa</span>
     </Button>

@@ -4,6 +4,7 @@ import { Inbox, ListTodo, Plus, SearchX } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Button, EmptyState, ErrorState, SkeletonRows, buttonClasses } from "@/components/ui";
+import { usePermissions } from "@/features/session/use-permissions";
 import { PageHeader } from "@/features/shell/page-header";
 import { FilterBar } from "./task-filters";
 import { TaskCreate } from "./task-create";
@@ -35,7 +36,10 @@ export function TasksView({ mode }: TasksViewProps) {
 
   const changeStatus = useStatusChange(setTasks);
 
-  const newTaskButton = (
+  const can = usePermissions();
+  const canCreate = can.canCreateTasks();
+  const description = mode === "all" && !can.isManager() ? "Tarefas do seu departamento e as atribuídas a você." : copy[mode].description;
+  const newTaskButton = canCreate && (
     <Button variant="primary" size="sm" leadingIcon={<Plus size={15} aria-hidden />} onClick={() => setCreating(true)}>
       <span className="sr-only sm:not-sr-only">Nova tarefa</span>
     </Button>
@@ -43,7 +47,7 @@ export function TasksView({ mode }: TasksViewProps) {
 
   return (
     <>
-      <PageHeader title={copy[mode].title} description={copy[mode].description} actions={newTaskButton} />
+      <PageHeader title={copy[mode].title} description={description} actions={newTaskButton} />
 
       <FilterBar filters={filters} onChange={setFilters} onClear={clearFilters} reference={reference} resultCount={shownCount} hideAssignee={mine} />
 

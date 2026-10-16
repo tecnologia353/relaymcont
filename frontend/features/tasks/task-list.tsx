@@ -8,6 +8,7 @@ import { priorityLabel, statusLabel } from "@/lib/api";
 import type { Status, Task } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { dayDiff, formatDateTime, formatDue, isOverdue } from "@/lib/format";
+import { usePermissions } from "@/features/session/use-permissions";
 import { StatusMenu } from "./task-property-menus";
 import { checklistProgress } from "./task-utils";
 import type { TaskGroup } from "./task-utils";
@@ -70,6 +71,7 @@ export function TaskList({ groups, onOpen, onStatusChange }: TaskListProps) {
 }
 
 function TaskRow({ task, onOpen, onStatusChange }: { task: Task; onOpen: (task: Task) => void; onStatusChange: (task: Task, status: Status) => void }) {
+  const editable = usePermissions().canWorkOnTask(task);
   const overdue = isOverdue(task);
   const dueToday = !overdue && dayDiff(task.due_date) === 0 && task.status !== "done";
   const progress = checklistProgress(task);
@@ -78,13 +80,14 @@ function TaskRow({ task, onOpen, onStatusChange }: { task: Task; onOpen: (task: 
     <li className="group flex h-11 items-center gap-1 border-b border-line pl-2.5 pr-4 transition-colors focus-within:bg-hover/60 hover:bg-hover/60 md:pl-4 md:pr-6">
       <StatusMenu
         value={task.status}
+        disabled={!editable}
         onChange={(status) => onStatusChange(task, status)}
         trigger={(props) => (
           <button
             {...props}
             type="button"
             aria-label={`Status: ${statusLabel[task.status]}. Alterar status`}
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-md transition-colors hover:bg-hover"
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-md transition-colors hover:bg-hover disabled:cursor-default disabled:hover:bg-transparent"
           >
             <StatusIcon status={task.status} />
           </button>

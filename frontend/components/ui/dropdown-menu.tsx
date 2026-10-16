@@ -31,6 +31,8 @@ export interface MenuTriggerProps {
   "aria-haspopup": "menu";
   "aria-expanded": boolean;
   "aria-controls": string | undefined;
+  /** Gatilho sem efeito (ex.: sem permissão); espalhe no <button> para desabilitá-lo. */
+  disabled?: boolean;
 }
 
 interface DropdownMenuProps {
@@ -40,12 +42,13 @@ interface DropdownMenuProps {
   align?: "start" | "end";
   label?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 const MENU_GAP = 4;
 const MENU_MAX_HEIGHT = 320;
 
-export function DropdownMenu({ trigger, items, align = "start", label, className }: DropdownMenuProps) {
+export function DropdownMenu({ trigger, items, align = "start", label, className, disabled = false }: DropdownMenuProps) {
   const menuId = useId();
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState<CSSProperties>({});
@@ -119,9 +122,9 @@ export function DropdownMenu({ trigger, items, align = "start", label, className
     ref: (element) => {
       triggerRef.current = element;
     },
-    onClick: () => setOpen((value) => !value),
+    onClick: () => !disabled && setOpen((value) => !value),
     onKeyDown: (event) => {
-      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      if (!disabled && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
         event.preventDefault();
         setOpen(true);
       }
@@ -129,6 +132,7 @@ export function DropdownMenu({ trigger, items, align = "start", label, className
     "aria-haspopup": "menu",
     "aria-expanded": open,
     "aria-controls": open ? menuId : undefined,
+    ...(disabled && { disabled: true }),
   };
 
   return (

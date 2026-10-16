@@ -7,6 +7,8 @@ import { useToast } from "@/components/ui";
 import { api } from "@/lib/api";
 import type { Client, Department, Status, Task, User } from "@/lib/api";
 import { emit, useRelayEvent } from "@/lib/events";
+import { usePermissions } from "@/features/session/use-permissions";
+import { permissionDenied } from "@/lib/permissions";
 import { fetchTasks, updateTask } from "./tasks-api";
 import { emptyFilters, parseFilters, writeFilters } from "./task-utils";
 import type { TaskFilters } from "./task-utils";
@@ -42,8 +44,13 @@ export function useTasks(mine: boolean) {
 /** Troca de status otimista: atualiza a tela na hora e desfaz se a API falhar. */
 export function useStatusChange(setTasks: Dispatch<SetStateAction<Task[]>>) {
   const { toast } = useToast();
+  const can = usePermissions();
   return useCallback(
     async (task: Task, status: Status) => {
+      if (!can.canWorkOnTask(task)) {
+        toast({ tone: "error", title: "Não foi possível alterar o status", description: permissionDenied });
+        return;
+      }
       setTasks((list) => list.map((item) => (item.id === task.id ? { ...item, status } : item)));
       try {
         await updateTask(task.id, { status });
@@ -53,7 +60,7 @@ export function useStatusChange(setTasks: Dispatch<SetStateAction<Task[]>>) {
         toast({ tone: "error", title: "Não foi possível alterar o status", description: (error as Error).message });
       }
     },
-    [setTasks, toast],
+    [setTasks, toast, can],
   );
 }
 

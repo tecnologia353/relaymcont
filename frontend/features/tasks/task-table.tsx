@@ -7,6 +7,7 @@ import { statusLabel } from "@/lib/api";
 import type { Status, Task } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { dayDiff, formatDateTime, formatDue, isOpenStatus, isOverdue } from "@/lib/format";
+import { usePermissions } from "@/features/session/use-permissions";
 import { StatusMenu } from "./task-property-menus";
 import { checklistProgress } from "./task-utils";
 
@@ -95,6 +96,7 @@ function SortHeader({ label, sort, onSort, className }: { label: string; sort: "
 }
 
 function Row({ task, onOpen, onStatusChange }: { task: Task; onOpen: (task: Task) => void; onStatusChange: (task: Task, status: Status) => void }) {
+  const editable = usePermissions().canWorkOnTask(task);
   const overdue = isOverdue(task);
   const dueToday = !overdue && isOpenStatus(task.status) && dayDiff(task.due_date) === 0;
   const progress = checklistProgress(task);
@@ -142,13 +144,14 @@ function Row({ task, onOpen, onStatusChange }: { task: Task; onOpen: (task: Task
       <td className={cell} onClick={(event) => event.stopPropagation()}>
         <StatusMenu
           value={task.status}
+          disabled={!editable}
           onChange={(status) => onStatusChange(task, status)}
           trigger={(props) => (
             <button
               {...props}
               type="button"
               aria-label={`Status: ${statusLabel[task.status]}. Alterar status`}
-              className="-ml-1.5 inline-flex h-7 max-w-full items-center gap-1.5 rounded-md px-1.5 text-fg transition-colors hover:bg-hover"
+              className="-ml-1.5 inline-flex h-7 max-w-full items-center gap-1.5 rounded-md px-1.5 text-fg transition-colors hover:bg-hover disabled:cursor-default disabled:hover:bg-transparent"
             >
               <StatusIcon status={task.status} />
               <span className="truncate">{statusLabel[task.status]}</span>

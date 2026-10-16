@@ -1,5 +1,7 @@
 import { Building2, CalendarDays, Columns3, Home, Inbox, ListTodo, SunMedium, Users, Workflow } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import type { User } from "@/lib/api";
+import { canViewOperations, canViewProcesses } from "@/lib/permissions";
 
 export interface NavItem {
   href: string;
@@ -9,6 +11,8 @@ export interface NavItem {
   soon?: boolean;
   /** Mostra o contador de notificações não lidas. */
   unreadBadge?: boolean;
+  /** Regra de acesso (lib/permissions.ts); sem ela, todos veem. */
+  visible?: (user: User) => boolean;
 }
 
 export interface NavGroup {
@@ -28,16 +32,11 @@ export const navGroups: NavGroup[] = [
     label: "Escritório",
     items: [
       { href: "/tarefas", label: "Tarefas", icon: ListTodo },
-      { href: "/operacao", label: "Operação", icon: Columns3 },
+      { href: "/operacao", label: "Operação", icon: Columns3, visible: canViewOperations },
+      { href: "/processos", label: "Processos", icon: Workflow, visible: canViewProcesses },
+      { href: "/calendario", label: "Calendário", icon: CalendarDays },
       { href: "/clientes", label: "Clientes", icon: Building2 },
       { href: "/equipe", label: "Equipe", icon: Users },
-    ],
-  },
-  {
-    label: "Em breve",
-    items: [
-      { href: "/processos", label: "Processos", icon: Workflow, soon: true },
-      { href: "/calendario", label: "Calendário", icon: CalendarDays, soon: true },
     ],
   },
 ];

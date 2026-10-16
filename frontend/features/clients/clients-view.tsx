@@ -28,6 +28,7 @@ import type { Client, Task, User } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatDue, isOpenStatus, isOverdue } from "@/lib/format";
 import { clientStatusLabel, labelOf } from "@/lib/labels";
+import { usePermissions } from "@/features/session/use-permissions";
 import { PageHeader } from "@/features/shell/page-header";
 import { fetchTasks } from "@/features/tasks/tasks-api";
 
@@ -124,7 +125,8 @@ export function ClientsView() {
     router[id ? "push" : "replace"](search ? `${pathname}?${search}` : pathname, { scroll: false });
   };
 
-  const newClientButton = (
+  const canCreate = usePermissions().canManageClients();
+  const newClientButton = canCreate && (
     <Button variant="primary" size="sm" leadingIcon={<Plus size={15} aria-hidden />} onClick={() => setCreating(true)}>
       <span className="sr-only sm:not-sr-only">Novo cliente</span>
     </Button>

@@ -10,6 +10,7 @@ import type { Status, Task } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatDue, formatTime, isOverdue } from "@/lib/format";
 import { PageHeader } from "@/features/shell/page-header";
+import { isManager } from "@/lib/permissions";
 import { useCurrentUser } from "@/features/session/session-provider";
 import { TaskDetail } from "@/features/tasks/task-detail";
 import { useReferenceData, useTaskUrlState, useTasks } from "@/features/tasks/use-task-data";
@@ -29,11 +30,18 @@ export function HomeView() {
   const reference = useReferenceData();
   const { openTaskId, openTask, closeTask } = useTaskUrlState();
 
-  const metrics = useMemo(() => computeHomeMetrics(tasks, reference.users, reference.departments), [tasks, reference]);
+  // Gestores veem o escritório; os demais, o próprio departamento (as tarefas já chegam filtradas pela API).
+  const officeWide = isManager(user);
+  const metrics = useMemo(() => {
+    const departments = officeWide ? reference.departments : reference.departments.filter((item) => item.id === user.department_id);
+    const users = officeWide ? reference.users : reference.users.filter((item) => item.department_id === user.department_id);
+    return computeHomeMetrics(tasks, users, departments);
+  }, [tasks, reference, officeWide, user.department_id]);
+  const departmentName = reference.departments.find((item) => item.id === user.department_id)?.name;
 
   return (
     <>
-      <PageHeader title="Home" description="Panorama da operação do escritório." />
+      <PageHeader title="Home" description={officeWide || !departmentName ? "Panorama da operação do escritório." : `Panorama do departamento ${departmentName}.`} />
 
       <div className="mx-auto w-full max-w-[1400px] flex-1 space-y-6 px-4 py-6 md:px-6 md:py-8">
         <Greeting name={user.name} metrics={state === "ready" ? metrics : null} />

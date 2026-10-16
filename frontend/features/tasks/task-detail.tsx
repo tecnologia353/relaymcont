@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown, MessageSquare } from "lucide-react";
+import { ArrowUpRight, ChevronDown, MessageSquare } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Avatar, Badge, Button, Checkbox, ErrorState, Kbd, PriorityIcon, Progress, Sheet, Skeleton, StatusIcon, Textarea, useToast } from "@/components/ui";
@@ -9,6 +10,7 @@ import type { Priority, Status, Task } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { emit, useRelayEvent } from "@/lib/events";
 import { formatDateTime, formatDue, formatRelativeTime, isOverdue } from "@/lib/format";
+import { usePermissions } from "@/features/session/use-permissions";
 import { PriorityMenu, StatusMenu } from "./task-property-menus";
 import { addComment, fetchTask, setChecklistItem, updateTask } from "./tasks-api";
 import type { TaskPatch } from "./tasks-api";
@@ -42,6 +44,7 @@ export function TaskDetail({ taskId, onClose }: TaskDetailProps) {
   useRelayEvent("tasks:changed", load);
 
   const task = state.status === "ready" ? state.task : null;
+  const can = usePermissions();
 
   /** Atualização otimista: aplica na tela, chama a API e desfaz em caso de erro. */
   const mutate = async (optimistic: (task: Task) => Task, request: () => Promise<unknown>, errorTitle: string) => {
@@ -82,6 +85,7 @@ export function TaskDetail({ taskId, onClose }: TaskDetailProps) {
 
           <ChecklistSection
             task={task}
+            disabled={!can.canWorkOnTask(task)}
             onToggle={(itemId, done) =>
               mutate(
                 (current) => ({ ...current, checklist: current.checklist.map((item) => (item.id === itemId ? { ...item, done } : item)) }),
@@ -104,11 +108,13 @@ export function TaskDetail({ taskId, onClose }: TaskDetailProps) {
 
 function Properties({ task, onPatch }: { task: Task; onPatch: (patch: TaskPatch) => void }) {
   const overdue = isOverdue(task);
+  const can = usePermissions();
   return (
     <dl className="grid grid-cols-[minmax(0,7.5rem)_1fr] items-center gap-x-4 gap-y-1.5 text-sm">
       <Property label="Status">
         <StatusMenu
           value={task.status}
+          disabled={!can.canWorkOnTask(task)}
           onChange={(status: Status) => onPatch({ status })}
           trigger={(props) => (
             <PropertyButton {...props} aria-label={`Status: ${statusLabel[task.status]}. Alterar`}>
@@ -121,6 +127,7 @@ function Properties({ task, onPatch }: { task: Task; onPatch: (patch: TaskPatch)
       <Property label="Prioridade">
         <PriorityMenu
           value={task.priority}
+          disabled={!can.canPlanTask(task)}
           onChange={(priority: Priority) => onPatch({ priority })}
           trigger={(props) => (
             <PropertyButton {...props} aria-label={`Prioridade: ${priorityLabel[task.priority]}. Alterar`}>
@@ -143,6 +150,13 @@ function Properties({ task, onPatch }: { task: Task; onPatch: (patch: TaskPatch)
       <Property label="Cliente">
         <span className="flex h-7 items-center truncate">{task.client.trade_name}</span>
       </Property>
+      {task.process_id && (
+        <Property label="Processo">
+          <Link href={`/processos?processo=${task.process_id}`} className="flex h-7 w-fit items-center gap-1 truncate hover:text-accent">
+            Ver etapas do processo <ArrowUpRight size={13} aria-hidden />
+          </Link>
+        </Property>
+      )}
       <Property label="Criada por">
         <span className="flex h-7 items-center gap-2 text-fg-muted">
           <Avatar name={task.creator.name} size="xs" />
@@ -168,10 +182,10 @@ function PropertyButton({ children, ...props }: ComponentPropsWithRef<"button">)
     <button
       type="button"
       {...props}
-      className="-ml-2 inline-flex h-7 items-center gap-2 rounded-md px-2 font-medium transition-colors hover:bg-hover"
+      className="group/prop -ml-2 inline-flex h-7 items-center gap-2 rounded-md px-2 font-medium transition-colors hover:bg-hover disabled:cursor-default disabled:hover:bg-transparent"
     >
       {children}
-      <ChevronDown size={13} className="text-fg-subtle" aria-hidden />
+      <ChevronDown size={13} className="text-fg-subtle group-disabled/prop:hidden" aria-hidden />
     </button>
   );
 }
@@ -187,7 +201,7 @@ function Person({ name }: { name: string }) {
 
 /* ---------- Checklist ---------- */
 
-function ChecklistSection({ task, onToggle }: { task: Task; onToggle: (itemId: number, done: boolean) => void }) {
+function ChecklistSection({ task, onToggle, disabled }: { task: Task; onToggle: (itemId: number, done: boolean) => void; disabled: boolean }) {
   const { done, total } = checklistProgress(task);
   if (total === 0) return null;
   return (
@@ -206,6 +220,7 @@ function ChecklistSection({ task, onToggle }: { task: Task; onToggle: (itemId: n
           <li key={item.id}>
             <Checkbox
               checked={item.done}
+              disabled={disabled}
               onChange={(event) => onToggle(item.id, event.target.checked)}
               label={<span className={cn("text-sm", item.done ? "text-fg-muted line-through decoration-fg-subtle" : "text-fg")}>{item.title}</span>}
               className="-mx-2 flex w-[calc(100%+1rem)] rounded-md px-2 py-1.5 transition-colors hover:bg-hover/60"

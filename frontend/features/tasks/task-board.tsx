@@ -8,6 +8,7 @@ import { priorityLabel, statusLabel } from "@/lib/api";
 import type { Status, Task } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { dayDiff, formatDateTime, formatDue, isOpenStatus, isOverdue } from "@/lib/format";
+import { usePermissions } from "@/features/session/use-permissions";
 import { StatusMenu } from "./task-property-menus";
 import { checklistProgress } from "./task-utils";
 
@@ -117,10 +118,11 @@ function BoardCard({ task, dimmed, onOpen, onStatusChange, onDragStart, onDragEn
   const dueToday = !overdue && isOpenStatus(task.status) && dayDiff(task.due_date) === 0;
   const progress = checklistProgress(task);
   const closed = !isOpenStatus(task.status);
+  const editable = usePermissions().canWorkOnTask(task);
 
   return (
     <li
-      draggable
+      draggable={editable}
       onDragStart={(event) => {
         event.dataTransfer.setData(DRAG_TYPE, String(task.id));
         event.dataTransfer.effectAllowed = "move";
@@ -128,20 +130,22 @@ function BoardCard({ task, dimmed, onOpen, onStatusChange, onDragStart, onDragEn
       }}
       onDragEnd={onDragEnd}
       className={cn(
-        "group relative cursor-grab rounded-lg border border-line bg-surface p-3 shadow-xs transition-[border-color,box-shadow,opacity] hover:border-line-strong focus-within:border-line-strong active:cursor-grabbing",
+        "group relative rounded-lg border border-line bg-surface p-3 shadow-xs transition-[border-color,box-shadow,opacity] hover:border-line-strong focus-within:border-line-strong",
+        editable && "cursor-grab active:cursor-grabbing",
         dimmed && "opacity-40",
       )}
     >
       <div className="flex items-start gap-2">
         <StatusMenu
           value={task.status}
+          disabled={!editable}
           onChange={(status) => onStatusChange(task, status)}
           trigger={(props) => (
             <button
               {...props}
               type="button"
               aria-label={`Status: ${statusLabel[task.status]}. Alterar status`}
-              className="relative z-10 -ml-1 -mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md transition-colors hover:bg-hover"
+              className="relative z-10 -ml-1 -mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md transition-colors hover:bg-hover disabled:cursor-default disabled:hover:bg-transparent"
             >
               <StatusIcon status={task.status} />
             </button>

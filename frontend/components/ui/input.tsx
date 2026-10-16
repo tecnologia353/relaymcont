@@ -50,18 +50,20 @@ export function Textarea({ invalid, className, "aria-invalid": ariaInvalid, ...p
   );
 }
 
-export interface SelectProps extends ComponentPropsWithRef<"select"> {
+export interface SelectProps extends Omit<ComponentPropsWithRef<"select">, "size"> {
   invalid?: boolean;
+  /** sm = 32px (barras de ferramentas); md = 36px (formulários). */
+  size?: "sm" | "md";
   /** Classes do contêiner (largura, margem). */
   className?: string;
 }
 
 /** Select nativo estilizado: mantém acessibilidade e o teclado/seletor do sistema no celular. */
-export function Select({ invalid, className, children, "aria-invalid": ariaInvalid, ...props }: SelectProps) {
+export function Select({ invalid, size = "md", className, children, "aria-invalid": ariaInvalid, ...props }: SelectProps) {
   return (
     <div className={cn("relative", className)}>
       <select
-          className={cn(control, "h-9 cursor-pointer appearance-none pl-2.5 pr-8")}
+        className={cn(control, "cursor-pointer appearance-none pl-2.5 pr-8", size === "sm" ? "h-8 text-sm" : "h-9")}
         {...props}
         aria-invalid={invalid || ariaInvalid || undefined}
       >

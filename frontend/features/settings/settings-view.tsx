@@ -7,7 +7,9 @@ import { Avatar, Button, Dialog, SegmentedControl } from "@/components/ui";
 import type { SegmentedOption } from "@/components/ui";
 import { api } from "@/lib/api";
 import type { Department } from "@/lib/api";
+import Link from "next/link";
 import { labelOf, roleLabel } from "@/lib/labels";
+import { canResetOfficeData } from "@/lib/permissions";
 import { useCurrentUser, useSession } from "@/features/session/session-provider";
 import { PageBody, PageHeader } from "@/features/shell/page-header";
 import { themeLabel, useTheme } from "@/features/theme/theme";
@@ -52,7 +54,14 @@ export function SettingsView() {
             </div>
           </div>
           <Row label="E-mail">{user.email}</Row>
-          <Row label="Perfil de acesso">{labelOf(roleLabel, user.role)}</Row>
+          <Row label="Perfil de acesso">
+            <span className="inline-flex items-center gap-3">
+              {labelOf(roleLabel, user.role)}
+              <Link href="/equipe?aba=perfis" className="text-sm font-medium text-accent hover:underline">
+                O que meu perfil permite?
+              </Link>
+            </span>
+          </Row>
           <Row label="Departamento">{department ?? "—"}</Row>
         </Section>
 
@@ -70,13 +79,15 @@ export function SettingsView() {
           </Row>
         </Section>
 
-        <Section title="Dados locais" description="Nesta versão, os dados do escritório ficam salvos apenas neste navegador.">
-          <Row label="Restaurar dados de demonstração" description="Apaga tarefas, clientes e comentários salvos neste navegador e recria os dados iniciais.">
-            <Button variant="danger" leadingIcon={<RotateCcw size={14} aria-hidden />} onClick={() => setConfirmReset(true)}>
-              Restaurar
-            </Button>
-          </Row>
-        </Section>
+        {canResetOfficeData(user) && (
+          <Section title="Dados locais" description="Nesta versão, os dados do escritório ficam salvos apenas neste navegador.">
+            <Row label="Restaurar dados de demonstração" description="Apaga tarefas, clientes e comentários salvos neste navegador e recria os dados iniciais.">
+              <Button variant="danger" leadingIcon={<RotateCcw size={14} aria-hidden />} onClick={() => setConfirmReset(true)}>
+                Restaurar
+              </Button>
+            </Row>
+          </Section>
+        )}
       </PageBody>
 
       <Dialog

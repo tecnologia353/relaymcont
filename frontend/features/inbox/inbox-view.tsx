@@ -1,6 +1,6 @@
 "use client";
 
-import { AtSign, Bell, CheckCheck, Inbox, UserPlus } from "lucide-react";
+import { AtSign, Bell, CheckCheck, Inbox, UserPlus, Users, Workflow } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -25,6 +25,8 @@ const filterOptions: SegmentedOption<Filter>[] = [
 function kindOf(message: string): { icon: ReactNode; label: string } {
   if (message.includes("mencionou")) return { icon: <AtSign size={14} />, label: "Menção" };
   if (message.includes("atribuiu")) return { icon: <UserPlus size={14} />, label: "Atribuição" };
+  if (/convite|entrou na equipe|Boas-vindas/.test(message)) return { icon: <Users size={14} />, label: "Equipe" };
+  if (message.includes("iniciou")) return { icon: <Workflow size={14} />, label: "Processo" };
   return { icon: <Bell size={14} />, label: "Alerta" };
 }
 

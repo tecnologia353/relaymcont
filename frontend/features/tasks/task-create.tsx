@@ -1,12 +1,13 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import { Button, Field, IconButton, Input, Select, Sheet, Textarea, priorityOrder, useToast } from "@/components/ui";
 import { priorityLabel } from "@/lib/api";
 import type { Priority } from "@/lib/api";
 import { emit } from "@/lib/events";
+import { usePermissions } from "@/features/session/use-permissions";
 import { createTask } from "./tasks-api";
 import { COMPETENCE_PATTERN, currentCompetence, defaultChecklist } from "./task-utils";
 import type { ReferenceData } from "./use-task-data";
@@ -63,9 +64,20 @@ export function TaskCreate({ open, onClose, onCreated, reference }: TaskCreatePr
   return open ? <TaskCreateForm onClose={onClose} onCreated={onCreated} reference={reference} /> : null;
 }
 
-function TaskCreateForm({ onClose, onCreated, reference }: Omit<TaskCreateProps, "open">) {
+function TaskCreateForm({ onClose, onCreated, reference: fullReference }: Omit<TaskCreateProps, "open">) {
   const { toast } = useToast();
-  const [form, setForm] = useState<FormState>(initialForm);
+  const can = usePermissions();
+  const scope = can.taskDepartmentScope();
+  /** Departamentos e pessoas disponíveis para quem está criando (supervisor: só o departamento dele). */
+  const reference = useMemo(
+    () => ({
+      ...fullReference,
+      users: fullReference.users.filter((user) => can.canAssignTo(user)),
+      departments: scope ? fullReference.departments.filter((department) => scope.includes(department.id)) : fullReference.departments,
+    }),
+    [fullReference, can, scope],
+  );
+  const [form, setForm] = useState<FormState>(() => ({ ...initialForm(), department_id: scope?.length === 1 ? String(scope[0]) : "" }));
   const [checklist, setChecklist] = useState<string[]>(defaultChecklist);
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
