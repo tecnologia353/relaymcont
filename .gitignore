@@ -7,7 +7,6 @@ node_modules/
 dist/
 build/
 .DS_Store
-
 # Local databases, logs, build caches
 *.db
 *.log
